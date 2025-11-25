@@ -21,13 +21,13 @@ STOPWORDS = {
     # Modal verbs
     "will", "would", "shall", "should", "can", "could", "may", "might", "must",
 
-    # Personal pronouns
+    # Personal pronouns (including lemmatized forms like "u" from "us")
     "i", "me", "my", "mine", "myself",
     "you", "your", "yours", "yourself", "yourselves",
     "he", "him", "his", "himself",
     "she", "her", "hers", "herself",
     "it", "its", "itself",
-    "we", "us", "our", "ours", "ourselves",
+    "we", "us", "u", "our", "ours", "ourselves",
     "they", "them", "their", "theirs", "themselves",
 
     # Demonstratives

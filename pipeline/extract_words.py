@@ -5,7 +5,13 @@ import re
 from collections import Counter
 from pathlib import Path
 
+import nltk
+from nltk.stem import WordNetLemmatizer
+
 from config import BIBLE_JSON_PATH, RAW_WORDS_PATH, OUTPUT_DIR
+
+# Initialize lemmatizer
+lemmatizer = WordNetLemmatizer()
 
 
 def load_bible() -> dict:
@@ -38,6 +44,27 @@ def clean_text(text: str) -> str:
     return text.lower().strip()
 
 
+def lemmatize_word(word: str) -> str:
+    """Convert word to its base form (lemma)."""
+    # Get both noun and verb lemmas
+    noun_lemma = lemmatizer.lemmatize(word, pos='n')
+    verb_lemma = lemmatizer.lemmatize(word, pos='v')
+
+    # Prefer verb lemma for common irregular verbs (was->be, has->have)
+    # These produce nonsense noun lemmas (wa, ha)
+    if verb_lemma != word and len(verb_lemma) > 1:
+        # Verb lemma is valid and different
+        if noun_lemma == word or len(noun_lemma) <= 2:
+            # Noun lemma unchanged or too short (likely wrong)
+            return verb_lemma
+
+    # Otherwise prefer noun lemma for plurals (sons->son, kings->king)
+    if noun_lemma != word:
+        return noun_lemma
+
+    return verb_lemma
+
+
 def extract_words(bible: dict) -> Counter:
     """Extract all words from Bible text."""
     word_counts = Counter()
@@ -49,7 +76,9 @@ def extract_words(bible: dict) -> Counter:
                 verse_count += 1
                 cleaned = clean_text(text)
                 words = cleaned.split()
-                word_counts.update(words)
+                # Lemmatize each word before counting
+                lemmatized = [lemmatize_word(w) for w in words]
+                word_counts.update(lemmatized)
 
     print(f"Processed {verse_count} verses")
     print(f"Found {len(word_counts)} unique words")
