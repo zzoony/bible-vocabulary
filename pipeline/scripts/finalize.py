@@ -8,6 +8,7 @@ from config import (
     FINAL_OUTPUT_PATH,
     MIN_WORD_LENGTH,
     MIN_FREQUENCY,
+    VERSION_NAME,
 )
 
 
@@ -64,7 +65,7 @@ def save_output(words: list) -> None:
     """Save final vocabulary to JSON."""
     output = {
         "metadata": {
-            "source": "NIV Bible",
+            "source": VERSION_NAME,
             "extraction_date": datetime.now().strftime("%Y-%m-%d"),
             "total_unique_words": len(words),
             "total_occurrences": sum(item["count"] for item in words),

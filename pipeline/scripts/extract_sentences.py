@@ -7,12 +7,13 @@ from collections import defaultdict
 from config import (
     BIBLE_JSON_PATH,
     FINAL_OUTPUT_PATH,
-    OUTPUT_DIR,
+    VERSION_OUTPUT_DIR,
+    VERSION_NAME,
 )
 
 # Output files
-SENTENCES_PATH = OUTPUT_DIR / "sentences.json"
-VOCABULARY_WITH_SENTENCES_PATH = OUTPUT_DIR / "bible_vocabulary_with_sentences.json"
+SENTENCES_PATH = VERSION_OUTPUT_DIR / "sentences.json"
+VOCABULARY_WITH_SENTENCES_PATH = VERSION_OUTPUT_DIR / "bible_vocabulary_with_sentences.json"
 
 # Configuration
 MIN_SENTENCES_PER_WORD = 2
@@ -259,7 +260,7 @@ def save_outputs(sentences: dict, vocabulary: dict) -> None:
     sentences_output = {
         "metadata": {
             "total_sentences": len(sentences),
-            "source": "NIV Bible",
+            "source": VERSION_NAME,
         },
         "sentences": sentences,
     }

@@ -8,7 +8,7 @@ from pathlib import Path
 import nltk
 from nltk.stem import WordNetLemmatizer
 
-from config import BIBLE_JSON_PATH, RAW_WORDS_PATH, OUTPUT_DIR
+from config import BIBLE_JSON_PATH, RAW_WORDS_PATH, VERSION_OUTPUT_DIR
 
 # Initialize lemmatizer
 lemmatizer = WordNetLemmatizer()
@@ -89,7 +89,7 @@ def extract_words(bible: dict) -> Counter:
 
 def save_output(word_counts: Counter) -> None:
     """Save word counts to JSON."""
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    VERSION_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     output = {
         "metadata": {

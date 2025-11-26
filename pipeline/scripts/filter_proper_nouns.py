@@ -2,49 +2,33 @@
 
 import json
 import re
-from pathlib import Path
 
 from config import (
     BIBLE_JSON_PATH,
     FILTERED_STOPWORDS_PATH,
     FILTERED_PROPER_NOUNS_PATH,
     PROPER_NOUNS_PATH,
+    PROTECTED_WORDS_PATH,
 )
 
-# Words to KEEP even if detected as proper nouns
-# These appear capitalized in titles/references but are common vocabulary
-PROTECTED_WORDS = {
-    # Theological core words
-    "lord", "god", "spirit", "holy", "christ", "gospel", "scripture",
-    "heaven", "heavens", "heavenly", "angel", "angels", "demon", "demons",
-    "satan", "devil", "messiah", "savior", "redeemer",
 
-    # Common nouns often capitalized in Bible context
-    "king", "kings", "queen", "prince", "priest", "priests", "prophet", "prophets",
-    "son", "sons", "daughter", "daughters", "father", "mother", "brother", "brothers",
-    "sister", "child", "children", "servant", "servants", "master", "slave", "slaves",
+def load_protected_words() -> set:
+    """Load protected words from version-specific file."""
+    protected_words = set()
 
-    # Places/things often capitalized
-    "temple", "altar", "ark", "tabernacle", "sanctuary", "covenant",
-    "land", "lands", "city", "cities", "house", "mountain", "river", "sea",
-    "kingdom", "kingdoms", "nation", "nations", "tribe", "tribes",
+    if not PROTECTED_WORDS_PATH.exists():
+        print(f"Warning: Protected words file not found: {PROTECTED_WORDS_PATH}")
+        return protected_words
 
-    # Body parts, objects
-    "hand", "hands", "heart", "hearts", "eye", "eyes", "face", "head",
-    "blood", "bread", "wine", "oil", "water", "fire", "sword", "stone",
+    with open(PROTECTED_WORDS_PATH, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            # Skip empty lines and comments
+            if line and not line.startswith("#"):
+                protected_words.add(line.lower())
 
-    # Abstract concepts
-    "word", "words", "name", "names", "law", "laws", "commandment", "commandments",
-    "truth", "life", "death", "love", "faith", "hope", "grace", "mercy",
-    "sin", "sins", "righteous", "righteousness", "wicked", "wickedness",
-    "glory", "power", "wisdom", "knowledge", "peace", "joy",
-
-    # Actions/states
-    "day", "days", "night", "time", "place", "way", "voice",
-
-    # Other commonly capitalized but general words
-    "passover", "sabbath", "lamb", "offering", "sacrifice",
-}
+    print(f"Loaded {len(protected_words)} protected words from {PROTECTED_WORDS_PATH}")
+    return protected_words
 
 
 def load_filtered_words() -> dict:
@@ -61,11 +45,20 @@ def load_bible() -> dict:
 
 def load_proper_nouns_list() -> set:
     """Load known proper nouns from file."""
+    proper_nouns = set()
+
     if not PROPER_NOUNS_PATH.exists():
-        return set()
+        print(f"Warning: Proper nouns file not found: {PROPER_NOUNS_PATH}")
+        return proper_nouns
 
     with open(PROPER_NOUNS_PATH, "r", encoding="utf-8") as f:
-        return {line.strip().lower() for line in f if line.strip()}
+        for line in f:
+            line = line.strip()
+            # Skip empty lines and comments
+            if line and not line.startswith("#"):
+                proper_nouns.add(line.lower())
+
+    return proper_nouns
 
 
 def find_proper_nouns_in_bible(bible: dict) -> set:
@@ -132,6 +125,9 @@ def save_output(filtered_words: list, original_metadata: dict) -> None:
 def main():
     print("=== Step 3: Filter Proper Nouns ===")
 
+    # Load protected words from file
+    protected_words = load_protected_words()
+
     # Load data
     data = load_filtered_words()
 
@@ -145,8 +141,8 @@ def main():
     print(f"Loaded {len(known_proper_nouns)} known proper nouns from list")
 
     # Combine both sets, but exclude protected words
-    all_proper_nouns = (detected_proper_nouns | known_proper_nouns) - PROTECTED_WORDS
-    print(f"Protected words kept: {len(PROTECTED_WORDS)}")
+    all_proper_nouns = (detected_proper_nouns | known_proper_nouns) - protected_words
+    print(f"Protected words kept: {len(protected_words)}")
     print(f"Total proper nouns to filter: {len(all_proper_nouns)}")
 
     # Filter
