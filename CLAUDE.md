@@ -39,7 +39,10 @@ bible-vocabulary/
     │   ├── finalize.py       # Step 4: 최종 처리
     │   ├── extract_sentences.py  # Step 5: 예문 추출
     │   ├── add_definitions.py    # Step 6: 발음/뜻 생성
-    │   └── validate_definitions.py # Step 7: 검증
+    │   ├── validate_definitions.py # Step 7: 정의 검증
+    │   ├── translate_sentences.py  # Step 8: 예문 번역
+    │   ├── validate_translations.py # Step 9: 번역 검증
+    │   └── retry_missing_translations.py # 실패한 번역 재시도
     ├── source-data/          # 원본 성경 데이터
     │   └── {VERSION}_Bible.json
     └── output/               # 처리 결과물 (gitignore)
@@ -82,17 +85,36 @@ python validate_definitions.py                # 기본 검증 (API 샘플 50개)
 python validate_definitions.py --api-sample 0 # API 검증 없이 빠른 검증
 ```
 
-## Data Pipeline (7단계)
+### Translate Sentences (Step 8)
+```bash
+cd pipeline/scripts
+python translate_sentences.py              # 전체 실행 (step5_sentences.json → final_sentences_korean.json)
+python translate_sentences.py --test 100   # 테스트 (100개만)
+```
+**요구사항**: Claude CLI가 설치되어 PATH에 있어야 함
+
+### Validate Translations (Step 9)
+```bash
+cd pipeline/scripts
+python validate_translations.py            # 번역 품질 검증
+python validate_translations.py --fix      # 참조 패턴 자동 수정
+```
+**검증 항목**:
+- 빈 번역, 영어 단어 포함, 참조 패턴 포함 (예: "(창세기 1:1)"), 길이 비율 이상
+
+## Data Pipeline (9단계)
 
 | Step | Script | Output | 설명 |
 |------|--------|--------|------|
-| 1 | extract_words.py | raw_words.json | 단어 추출, Lemmatization |
-| 2 | filter_stopwords.py | filtered_stopwords.json | 불용어 제거 |
-| 3 | filter_proper_nouns.py | filtered_proper_nouns.json | 고유명사 제거 |
-| 4 | finalize.py | bible_vocabulary.json | 최소 길이/빈도 필터, 순위 부여 |
-| 5 | extract_sentences.py | bible_vocabulary_with_sentences.json | 예문 추출 (선택) |
-| 6 | add_definitions.py | bible_vocabulary_final.json | 발음/뜻 생성 (Claude) |
-| 7 | validate_definitions.py | - | 품질 검증 |
+| 1 | extract_words.py | step1_raw_words.json | 단어 추출, Lemmatization |
+| 2 | filter_stopwords.py | step2_filtered_stopwords.json | 불용어 제거 |
+| 3 | filter_proper_nouns.py | step3_filtered_proper_nouns.json | 고유명사 제거 |
+| 4 | finalize.py | step4_vocabulary.json | 최소 길이/빈도 필터, 순위 부여 |
+| 5 | extract_sentences.py | step5_vocabulary_with_sentences.json, step5_sentences.json | 예문 추출 |
+| 6 | add_definitions.py | final_vocabulary.json | 발음/뜻 생성 (Claude) |
+| 7 | validate_definitions.py | - | 단어 정의 검증 |
+| 8 | translate_sentences.py | final_sentences_korean.json | 예문 한글 번역 (Claude) |
+| 9 | validate_translations.py | - | 번역 품질 검증 |
 
 ## Configuration
 
@@ -127,7 +149,7 @@ python validate_definitions.py --api-sample 0 # API 검증 없이 빠른 검증
 
 ## Output Format
 
-`bible_vocabulary_final.json`:
+### final_vocabulary.json (단어장)
 ```json
 {
   "metadata": {
@@ -146,6 +168,28 @@ python validate_definitions.py --api-sample 0 # API 검증 없이 빠른 검증
       "definition_korean": "주인, 영주, 주님"
     }
   ]
+}
+```
+
+### final_sentences_korean.json (예문 + 한글 번역)
+```json
+{
+  "metadata": {
+    "source": "New International Version",
+    "total_sentences": 15177,
+    "korean_translations_added": true,
+    "translations_count": 15177
+  },
+  "sentences": {
+    "psalms-18-1": {
+      "text": "I love you, LORD, my strength.",
+      "ref": "Psalms 18:1",
+      "book": "Psalms",
+      "chapter": 18,
+      "verse": 1,
+      "korean": "여호와 나의 힘이여 내가 주를 사랑하나이다."
+    }
+  }
 }
 ```
 

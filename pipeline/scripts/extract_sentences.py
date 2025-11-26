@@ -6,14 +6,11 @@ from collections import defaultdict
 
 from config import (
     BIBLE_JSON_PATH,
-    FINAL_OUTPUT_PATH,
-    VERSION_OUTPUT_DIR,
+    STEP4_VOCABULARY_PATH,
+    STEP5_VOCABULARY_PATH,
+    STEP5_SENTENCES_PATH,
     VERSION_NAME,
 )
-
-# Output files
-SENTENCES_PATH = VERSION_OUTPUT_DIR / "sentences.json"
-VOCABULARY_WITH_SENTENCES_PATH = VERSION_OUTPUT_DIR / "bible_vocabulary_with_sentences.json"
 
 # Configuration
 MIN_SENTENCES_PER_WORD = 2
@@ -36,10 +33,10 @@ def load_bible() -> dict:
 def load_vocabulary() -> dict:
     """Load processed vocabulary."""
     try:
-        with open(FINAL_OUTPUT_PATH, "r", encoding="utf-8") as f:
+        with open(STEP4_VOCABULARY_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        raise FileNotFoundError(f"Vocabulary file not found: {FINAL_OUTPUT_PATH}")
+        raise FileNotFoundError(f"Vocabulary file not found: {STEP4_VOCABULARY_PATH}")
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON in vocabulary file: {e}")
 
@@ -265,13 +262,13 @@ def save_outputs(sentences: dict, vocabulary: dict) -> None:
         "sentences": sentences,
     }
 
-    with open(SENTENCES_PATH, "w", encoding="utf-8") as f:
+    with open(STEP5_SENTENCES_PATH, "w", encoding="utf-8") as f:
         json.dump(sentences_output, f, indent=2, ensure_ascii=False)
-    print(f"\nSaved sentences to {SENTENCES_PATH}")
+    print(f"\nSaved sentences to {STEP5_SENTENCES_PATH}")
 
-    with open(VOCABULARY_WITH_SENTENCES_PATH, "w", encoding="utf-8") as f:
+    with open(STEP5_VOCABULARY_PATH, "w", encoding="utf-8") as f:
         json.dump(vocabulary, f, indent=2, ensure_ascii=False)
-    print(f"Saved vocabulary with sentences to {VOCABULARY_WITH_SENTENCES_PATH}")
+    print(f"Saved vocabulary with sentences to {STEP5_VOCABULARY_PATH}")
 
 
 def main():
