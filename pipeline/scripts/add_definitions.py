@@ -18,8 +18,8 @@ from pathlib import Path
 from config import VERSION_OUTPUT_DIR, VERSION_NAME
 
 # Input/Output files
-INPUT_PATH = VERSION_OUTPUT_DIR / "bible_vocabulary_with_sentences.json"
-OUTPUT_PATH = VERSION_OUTPUT_DIR / "bible_vocabulary_final.json"
+INPUT_PATH = VERSION_OUTPUT_DIR / "step5_vocabulary_with_sentences.json"
+OUTPUT_PATH = VERSION_OUTPUT_DIR / "final_vocabulary.json"
 
 # Processing configuration
 BATCH_SIZE = 50  # Words per Claude request

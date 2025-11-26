@@ -10,7 +10,7 @@ from pathlib import Path
 from config import VERSION_OUTPUT_DIR
 
 # Input file
-INPUT_PATH = VERSION_OUTPUT_DIR / "bible_vocabulary_final.json"
+INPUT_PATH = VERSION_OUTPUT_DIR / "final_vocabulary.json"
 
 # Validation patterns
 HEBREW_PATTERN = re.compile(r'[א-ת]')

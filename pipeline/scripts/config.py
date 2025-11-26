@@ -49,10 +49,22 @@ PROTECTED_WORDS_PATH = VERSION_DATA_DIR / _config.get("protected_words_file", "p
 PROPER_NOUNS_PATH = VERSION_DATA_DIR / _config.get("proper_nouns_file", "proper_nouns.txt")
 
 # Output files (version-specific)
-RAW_WORDS_PATH = VERSION_OUTPUT_DIR / "raw_words.json"
-FILTERED_STOPWORDS_PATH = VERSION_OUTPUT_DIR / "filtered_stopwords.json"
-FILTERED_PROPER_NOUNS_PATH = VERSION_OUTPUT_DIR / "filtered_proper_nouns.json"
-FINAL_OUTPUT_PATH = VERSION_OUTPUT_DIR / "bible_vocabulary.json"
+# Step 1-4: Word extraction and filtering
+RAW_WORDS_PATH = VERSION_OUTPUT_DIR / "step1_raw_words.json"
+FILTERED_STOPWORDS_PATH = VERSION_OUTPUT_DIR / "step2_filtered_stopwords.json"
+FILTERED_PROPER_NOUNS_PATH = VERSION_OUTPUT_DIR / "step3_filtered_proper_nouns.json"
+STEP4_VOCABULARY_PATH = VERSION_OUTPUT_DIR / "step4_vocabulary.json"
+
+# Step 5: Sentences extraction
+STEP5_VOCABULARY_PATH = VERSION_OUTPUT_DIR / "step5_vocabulary_with_sentences.json"
+STEP5_SENTENCES_PATH = VERSION_OUTPUT_DIR / "step5_sentences.json"
+
+# Final outputs
+FINAL_VOCABULARY_PATH = VERSION_OUTPUT_DIR / "final_vocabulary.json"
+FINAL_SENTENCES_PATH = VERSION_OUTPUT_DIR / "final_sentences_korean.json"
+
+# Legacy alias (for backward compatibility)
+FINAL_OUTPUT_PATH = STEP4_VOCABULARY_PATH
 
 # Processing options
 MIN_WORD_LENGTH = _config.get("min_word_length", 2)
