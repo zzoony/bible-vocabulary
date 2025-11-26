@@ -17,13 +17,14 @@ pipeline/
 │       └── proper_nouns.txt       # 버전별 고유명사
 ├── output/
 │   └── {version}/                 # 버전별 출력 폴더
-│       ├── raw_words.json
-│       ├── filtered_stopwords.json
-│       ├── filtered_proper_nouns.json
-│       ├── bible_vocabulary.json
-│       ├── sentences.json
-│       ├── bible_vocabulary_with_sentences.json
-│       └── bible_vocabulary_final.json  # 발음/뜻 포함 최종본
+│       ├── step1_raw_words.json
+│       ├── step2_filtered_stopwords.json
+│       ├── step3_filtered_proper_nouns.json
+│       ├── step4_vocabulary.json
+│       ├── step5_vocabulary_with_sentences.json
+│       ├── step5_sentences.json
+│       ├── final_vocabulary.json        # 발음/뜻 포함 최종 단어장
+│       └── final_sentences_korean.json  # 예문 + 한글 번역
 └── source-data/
     └── {VERSION}_Bible.json       # 원본 성경 데이터
 ```
@@ -41,7 +42,7 @@ pipeline/
 │ - Lemmatization 적용 (sons → son, walked → walk)            │
 └─────────────────────────────────────────────────────────────┘
       ↓
-   output/{version}/raw_words.json (9,641 words)
+   output/{version}/step1_raw_words.json (9,641 words)
       ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 2: filter_stopwords.py                                 │
@@ -50,7 +51,7 @@ pipeline/
 │ - 관사, 대명사, 전치사, 접속사, be/have/do 동사 등            │
 └─────────────────────────────────────────────────────────────┘
       ↓
-   output/{version}/filtered_stopwords.json (9,471 words)
+   output/{version}/step2_filtered_stopwords.json (9,471 words)
       ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 3: filter_proper_nouns.py                              │
@@ -59,7 +60,7 @@ pipeline/
 │ - data/{version}/protected_words.txt로 보호단어 유지         │
 └─────────────────────────────────────────────────────────────┘
       ↓
-   output/{version}/filtered_proper_nouns.json (6,625 words)
+   output/{version}/step3_filtered_proper_nouns.json (6,625 words)
       ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 4: finalize.py                                         │
@@ -69,7 +70,7 @@ pipeline/
 │ - 빈도순 정렬 및 순위(rank) 부여                              │
 └─────────────────────────────────────────────────────────────┘
       ↓
-   output/{version}/bible_vocabulary.json (4,930 words)
+   output/{version}/step4_vocabulary.json (4,930 words)
       ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 5: extract_sentences.py (선택사항)                      │
@@ -77,8 +78,8 @@ pipeline/
 │ - 다양한 성경 책에서 추출하여 다양성 확보                      │
 └─────────────────────────────────────────────────────────────┘
       ↓
-   output/{version}/sentences.json
-   output/{version}/bible_vocabulary_with_sentences.json
+   output/{version}/step5_sentences.json
+   output/{version}/step5_vocabulary_with_sentences.json
       ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 6: add_definitions.py                                  │
@@ -87,7 +88,7 @@ pipeline/
 │ - 배치 처리 (50개/요청) + 병렬 처리 (10개 동시)               │
 └─────────────────────────────────────────────────────────────┘
       ↓
-   output/{version}/bible_vocabulary_final.json ← 최종 결과
+   output/{version}/final_vocabulary.json ← 최종 단어장
       ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ Step 7: validate_definitions.py (검증)                      │
@@ -95,6 +96,22 @@ pipeline/
 │ - 한글 발음 검증 (원어 혼입 감지)                             │
 │ - 한국어 뜻 검증                                             │
 │ - Free Dictionary API로 IPA 정확도 샘플 검증 (선택)          │
+└─────────────────────────────────────────────────────────────┘
+      ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Step 8: translate_sentences.py                              │
+│ - Claude Haiku를 이용한 예문 한글 번역                        │
+│ - 배치 처리 + 병렬 처리                                       │
+└─────────────────────────────────────────────────────────────┘
+      ↓
+   output/{version}/final_sentences_korean.json ← 최종 예문
+      ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Step 9: validate_translations.py (검증)                     │
+│ - 빈 번역 검출                                               │
+│ - 영어 단어 포함 여부                                        │
+│ - 참조 패턴 포함 여부 (예: "(창세기 1:1)")                    │
+│ - 길이 비율 이상 검출                                        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -120,66 +137,99 @@ python3 add_definitions.py --test 100         # 테스트 (100개만)
 python3 validate_definitions.py               # 기본 검증 (API 샘플 50개)
 python3 validate_definitions.py --api-sample 0   # API 검증 없이 빠른 검증
 python3 validate_definitions.py --api-sample 100 # API 샘플 100개로 검증
+
+# 예문 번역 (Step 8)
+python3 translate_sentences.py                # 전체 실행
+python3 translate_sentences.py --test 100     # 테스트 (100개만)
+
+# 번역 검증 (Step 9)
+python3 validate_translations.py              # 번역 품질 검증
+python3 validate_translations.py --fix        # 참조 패턴 자동 수정
+
+# 번역 재시도 (실패분)
+python3 retry_missing_translations.py         # 실패한 번역 재시도
 ```
 
 ## 파일 설명
 
-### 1. `raw_words.json`
+### 1. `step1_raw_words.json`
 - **생성**: `extract_words.py`
 - **내용**: 성경에서 추출한 모든 단어 (lemmatization 적용 후)
 - **용도**: 원본 추출 결과 확인, 디버깅
 
-### 2. `filtered_stopwords.json`
+### 2. `step2_filtered_stopwords.json`
 - **생성**: `filter_stopwords.py`
 - **내용**: 불용어 제거 후 남은 단어
 - **제거 대상**: a, an, the, is, are, was, I, you, he, in, on, to, and, or, but 등
 
-### 3. `filtered_proper_nouns.json`
+### 3. `step3_filtered_proper_nouns.json`
 - **생성**: `filter_proper_nouns.py`
 - **내용**: 고유명사 제거 후 남은 단어
 - **제거 대상**: Israel, Jesus, David, Moses, Jerusalem, Egypt 등
 - **보호 대상**: lord, god, king, son, father, temple, covenant 등
 
-### 4. `bible_vocabulary.json`
+### 4. `step4_vocabulary.json`
 - **생성**: `finalize.py`
 - **내용**: 기본 단어장 데이터
 - **특징**: 빈도순 정렬, 순위(rank) 포함
 
-### 5. `sentences.json` (선택)
+### 5. `step5_sentences.json`
 - **생성**: `extract_sentences.py`
 - **내용**: 예문으로 사용할 성경 구절들
-- **구조**: sentence_id → {text, ref, book}
+- **구조**: sentence_id → {text, ref, book, chapter, verse}
 
-### 6. `bible_vocabulary_with_sentences.json` (선택)
+### 6. `step5_vocabulary_with_sentences.json`
 - **생성**: `extract_sentences.py`
 - **내용**: 단어장 + 예문 ID 매핑
 
-### 7. `bible_vocabulary_final.json` (최종)
+### 7. `final_vocabulary.json` (최종 단어장)
 - **생성**: `add_definitions.py`
 - **내용**: 발음기호, 한글 발음, 한국어 뜻이 포함된 최종 단어장
 
+### 8. `final_sentences_korean.json` (최종 예문)
+- **생성**: `translate_sentences.py`
+- **내용**: 영어 예문 + 한글 번역
+
+#### final_vocabulary.json 형식
 ```json
 {
   "metadata": {
     "source": "New International Version",
-    "extraction_date": "2025-11-26",
     "total_unique_words": 4930,
-    "definitions_added": true,
-    "definitions_count": 4930,
-    "processing_date": "2025-11-26 11:28:57"
+    "definitions_added": true
   },
   "words": [
     {
       "word": "lord",
       "count": 7864,
       "rank": 1,
-      "sentence_ids": ["psalms-18-1", "isaiah-37-15", ...],
+      "sentence_ids": ["psalms-18-1", "..."],
       "ipa_pronunciation": "[lɔːrd]",
       "korean_pronunciation": "로드",
       "definition_korean": "주인, 영주, 주님"
-    },
-    ...
+    }
   ]
+}
+```
+
+#### final_sentences_korean.json 형식
+```json
+{
+  "metadata": {
+    "source": "New International Version",
+    "total_sentences": 15177,
+    "korean_translations_added": true
+  },
+  "sentences": {
+    "psalms-18-1": {
+      "text": "I love you, LORD, my strength.",
+      "ref": "Psalms 18:1",
+      "book": "Psalms",
+      "chapter": 18,
+      "verse": 1,
+      "korean": "여호와 나의 힘이여 내가 주를 사랑하나이다."
+    }
+  }
 }
 ```
 
@@ -221,11 +271,13 @@ API mismatches: 2
 
 | 단계 | 파일 | 단어 수 | 변화 |
 |------|------|---------|------|
-| Step 1 | raw_words.json | 9,641 | - |
-| Step 2 | filtered_stopwords.json | 9,471 | -170 |
-| Step 3 | filtered_proper_nouns.json | 6,625 | -2,846 |
-| Step 4 | bible_vocabulary.json | 4,930 | -1,695 |
-| Step 6 | bible_vocabulary_final.json | 4,930 | +발음/뜻 |
+| Step 1 | step1_raw_words.json | 9,641 | - |
+| Step 2 | step2_filtered_stopwords.json | 9,471 | -170 |
+| Step 3 | step3_filtered_proper_nouns.json | 6,625 | -2,846 |
+| Step 4 | step4_vocabulary.json | 4,930 | -1,695 |
+| Step 5 | step5_sentences.json | 15,177 예문 | - |
+| Step 6 | final_vocabulary.json | 4,930 | +발음/뜻 |
+| Step 8 | final_sentences_korean.json | 15,177 | +한글 번역 |
 
 ## 설정 파일
 

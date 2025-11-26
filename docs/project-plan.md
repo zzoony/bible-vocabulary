@@ -80,41 +80,101 @@ NIV 성경에서 단어를 추출하여 성경 기반 영어 단어장 앱을 �
   2. 1-2글자 단어 제거 (선택적)
   3. 빈도수 기준 정렬
   4. 빈도 순위(rank) 부여
-출력: bible_vocabulary.json
+출력: step4_vocabulary.json
+```
+
+#### Step 5: Sentence Extraction (선택)
+```
+입력: step4_vocabulary.json + 원본 성경
+처리:
+  1. 각 단어별 예문 추출 (2-5개)
+  2. 다양한 성경 책에서 추출
+출력: step5_vocabulary_with_sentences.json, step5_sentences.json
+```
+
+#### Step 6: Add Definitions
+```
+입력: step5_vocabulary_with_sentences.json
+처리:
+  1. Claude API로 발음기호/한글 발음/한국어 뜻 생성
+  2. 배치 처리 (50개/요청) + 병렬 처리
+출력: final_vocabulary.json
+요구사항: Claude CLI 설치 필요
+```
+
+#### Step 7: Validate Definitions
+```
+입력: final_vocabulary.json
+처리:
+  1. IPA 발음기호 형식 검증
+  2. 한글 발음 검증 (원어 혼입 감지)
+  3. Free Dictionary API로 샘플 검증
+출력: 검증 리포트 (콘솔 출력)
+```
+
+#### Step 8: Translate Sentences
+```
+입력: step5_sentences.json
+처리:
+  1. Claude API로 예문 한글 번역
+  2. 배치 처리 + 병렬 처리
+출력: final_sentences_korean.json
+요구사항: Claude CLI 설치 필요
+```
+
+#### Step 9: Validate Translations
+```
+입력: final_sentences_korean.json
+처리:
+  1. 빈 번역 검출
+  2. 영어 단어 포함 여부
+  3. 참조 패턴 포함 여부 (예: "(창세기 1:1)")
+  4. 길이 비율 이상 검출
+출력: 검증 리포트 (콘솔 출력)
 ```
 
 ### 2.3 최종 출력 형식
 
+#### final_vocabulary.json (단어장)
 ```json
 {
   "metadata": {
-    "source": "NIV Bible",
-    "extraction_date": "2025-01-01",
-    "total_verses_processed": 31102,
-    "total_unique_words": 8500,
-    "filters_applied": [
-      "stopwords",
-      "proper_nouns",
-      "numbers"
-    ]
+    "source": "New International Version",
+    "total_unique_words": 4930,
+    "definitions_added": true
   },
   "words": [
     {
       "word": "lord",
-      "count": 7365,
-      "rank": 1
-    },
-    {
-      "word": "god",
-      "count": 4447,
-      "rank": 2
-    },
-    {
-      "word": "love",
-      "count": 551,
-      "rank": 50
+      "count": 7864,
+      "rank": 1,
+      "sentence_ids": ["psalms-18-1", "..."],
+      "ipa_pronunciation": "[lɔːrd]",
+      "korean_pronunciation": "로드",
+      "definition_korean": "주인, 영주, 주님"
     }
   ]
+}
+```
+
+#### final_sentences_korean.json (예문 + 번역)
+```json
+{
+  "metadata": {
+    "source": "New International Version",
+    "total_sentences": 15177,
+    "korean_translations_added": true
+  },
+  "sentences": {
+    "psalms-18-1": {
+      "text": "I love you, LORD, my strength.",
+      "ref": "Psalms 18:1",
+      "book": "Psalms",
+      "chapter": 18,
+      "verse": 1,
+      "korean": "여호와 나의 힘이여 내가 주를 사랑하나이다."
+    }
+  }
 }
 ```
 
@@ -130,19 +190,24 @@ NIV 성경에서 단어를 추출하여 성경 기반 영어 단어장 앱을 �
 
 ```
 pipeline/
-├── extract_words.py      # Step 1: 단어 추출
-├── filter_stopwords.py   # Step 2: 불용어 제거
-├── filter_proper_nouns.py # Step 3: 고유명사 제거
-├── finalize.py           # Step 4: 최종 처리
-├── run_pipeline.py       # 전체 파이프라인 실행
-├── config.py             # 설정 (경로, 옵션)
-├── data/
-│   └── bible_proper_nouns.txt  # 성경 고유명사 목록
-└── output/
-    ├── raw_words.json
-    ├── filtered_stopwords.json
-    ├── filtered_proper_nouns.json
-    └── bible_vocabulary.json
+├── run_pipeline.py           # 전체 파이프라인 실행
+├── scripts/
+│   ├── config.py             # 설정 (경로, 옵션)
+│   ├── utils.py              # 공통 유틸리티
+│   ├── translation_utils.py  # 번역 유틸리티
+│   ├── extract_words.py      # Step 1: 단어 추출
+│   ├── filter_stopwords.py   # Step 2: 불용어 제거
+│   ├── filter_proper_nouns.py # Step 3: 고유명사 제거
+│   ├── finalize.py           # Step 4: 최종 처리
+│   ├── extract_sentences.py  # Step 5: 예문 추출
+│   ├── add_definitions.py    # Step 6: 발음/뜻 생성
+│   ├── validate_definitions.py # Step 7: 정의 검증
+│   ├── translate_sentences.py  # Step 8: 예문 번역
+│   ├── validate_translations.py # Step 9: 번역 검증
+│   └── retry_missing_translations.py # 번역 재시도
+├── data/{version}/           # 버전별 필터 데이터
+├── configs/{version}.json    # 버전별 설정
+└── output/{version}/         # 버전별 출력
 ```
 
 ---
@@ -165,17 +230,23 @@ pipeline/
 
 ## 4. 작업 체크리스트
 
-### Phase 1: Pipeline
+### Phase 1: Pipeline ✅ 완료
 
-- [ ] Python 환경 설정 (requirements.txt)
-- [ ] extract_words.py 구현
-- [ ] filter_stopwords.py 구현
-- [ ] filter_proper_nouns.py 구현
-- [ ] 성경 고유명사 목록 수집
-- [ ] finalize.py 구현
-- [ ] run_pipeline.py 구현
-- [ ] 테스트 및 검증
-- [ ] 결과물 리뷰 및 수동 검수
+- [x] Python 환경 설정 (requirements.txt)
+- [x] extract_words.py 구현 (Step 1)
+- [x] filter_stopwords.py 구현 (Step 2)
+- [x] filter_proper_nouns.py 구현 (Step 3)
+- [x] 성경 고유명사 목록 수집
+- [x] finalize.py 구현 (Step 4)
+- [x] run_pipeline.py 구현
+- [x] extract_sentences.py 구현 (Step 5)
+- [x] add_definitions.py 구현 (Step 6)
+- [x] validate_definitions.py 구현 (Step 7)
+- [x] translate_sentences.py 구현 (Step 8)
+- [x] validate_translations.py 구현 (Step 9)
+- [x] 멀티 버전 지원 구조 개선
+- [x] 테스트 및 검증
+- [x] 결과물 리뷰 및 수동 검수
 
 ### Phase 2: App
 
@@ -186,33 +257,31 @@ pipeline/
 
 ---
 
-## 5. 고려사항 및 결정 필요 항목
+## 5. 고려사항 및 결정 사항
 
-### 고유명사 처리
-1. **자동 필터링**: NER 라이브러리 사용 (정확도 ~85%)
-2. **수동 필터링**: 성경 고유명사 목록 직접 관리
-3. **하이브리드**: 자동 + 수동 검수
+### 고유명사 처리 ✅
+- **채택**: 하이브리드 방식 (자동 + 수동 검수)
+- 대문자 패턴 분석 + proper_nouns.txt 목록 사용
+- protected_words.txt로 보호단어 유지 (lord, god, king 등)
 
-**권장**: 하이브리드 방식
+### 단어 형태 처리 ✅
+- **채택**: Lemmatization 적용
+- NLTK WordNetLemmatizer 사용
+- loving, loved, loves → love
 
-### 단어 형태 처리
-- **Lemmatization**: loving, loved, loves → love
-- **장점**: 단어 수 감소, 학습 효율 증가
-- **단점**: 원형 복원 오류 가능성
-
-**권장**: 일단 원형 그대로 추출 후, 필요시 lemmatization 추가
-
-### 최소 빈도 기준
-- 1회만 등장하는 단어 포함 여부
-- **권장**: 2회 이상 등장 단어만 포함 (노이즈 제거)
+### 최소 빈도 기준 ✅
+- **채택**: 2회 이상 등장 단어만 포함
+- 최소 단어 길이: 2글자
 
 ---
 
-## 6. 예상 결과물
+## 6. 결과물 (NIV 기준)
 
-| 항목 | 예상 수치 |
-|------|----------|
-| 총 단어 수 (중복 포함) | ~800,000 |
-| 고유 단어 수 (필터링 전) | ~15,000 |
-| 고유 단어 수 (필터링 후) | ~6,000-8,000 |
-| 가장 많이 등장하는 단어 | lord, god, said, people |
+| 항목 | 수치 |
+|------|------|
+| 고유 단어 수 (Step 1) | 9,641개 |
+| 불용어 제거 후 (Step 2) | 9,471개 |
+| 고유명사 제거 후 (Step 3) | 6,625개 |
+| 최종 단어장 (Step 4) | 4,930개 |
+| 예문 수 (Step 5) | 15,177개 |
+| 가장 많이 등장하는 단어 | lord, say, come, go, people |

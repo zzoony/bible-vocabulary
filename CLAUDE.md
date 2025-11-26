@@ -18,8 +18,7 @@ bible-vocabulary/
 ├── app/                      # 단어장 앱 (Phase 2, 추후 개발)
 ├── docs/                     # 문서
 │   ├── project-plan.md       # 프로젝트 계획
-│   ├── pipeline-output-files.md  # 파이프라인 출력 파일 설명
-│   └── filtered-words.md     # 필터링된 단어 목록
+│   └── pipeline-output-files.md  # 파이프라인 출력 파일 설명
 └── pipeline/                 # 데이터 파이프라인
     ├── run_pipeline.py       # 파이프라인 실행 진입점
     ├── requirements.txt      # Python 의존성
@@ -33,6 +32,8 @@ bible-vocabulary/
     │       └── proper_nouns.txt
     ├── scripts/              # 처리 스크립트
     │   ├── config.py         # 경로 및 설정
+    │   ├── utils.py          # 공통 유틸리티 (로깅 등)
+    │   ├── translation_utils.py  # 번역 공통 함수
     │   ├── extract_words.py  # Step 1: 단어 추출
     │   ├── filter_stopwords.py   # Step 2: 불용어 제거
     │   ├── filter_proper_nouns.py # Step 3: 고유명사 제거
@@ -101,6 +102,14 @@ python validate_translations.py --fix      # 참조 패턴 자동 수정
 ```
 **검증 항목**:
 - 빈 번역, 영어 단어 포함, 참조 패턴 포함 (예: "(창세기 1:1)"), 길이 비율 이상
+
+### Retry Missing Translations (번역 실패 재시도)
+```bash
+cd pipeline/scripts
+python retry_missing_translations.py       # 실패한 번역 재시도 (최대 3회)
+```
+**요구사항**: Claude CLI가 설치되어 PATH에 있어야 함
+**용도**: `translate_sentences.py` 실행 후 일부 번역이 실패한 경우 재시도
 
 ## Data Pipeline (9단계)
 
