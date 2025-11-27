@@ -31,12 +31,16 @@ class WordCardFront extends StatelessWidget {
       child: Column(
         children: [
           const Spacer(),
-          Text(
-            word.word,
-            style: AppTypography.wordDisplay.copyWith(
-              color: isDark ? AppColors.darkText : AppColors.lightText,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              word.word,
+              style: AppTypography.wordDisplay.copyWith(
+                color: isDark ? AppColors.darkText : AppColors.lightText,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           if (word.ipaPronunciation != null)

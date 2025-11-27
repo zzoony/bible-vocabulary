@@ -136,36 +136,11 @@ class _WordLearningScreenState extends ConsumerState<WordLearningScreen> {
                 isDark ? AppColors.mint : AppColors.cardTerracotta,
               ),
             ),
-            // Swipe hints
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.arrow_upward,
-                    size: 16,
-                    color: isDark
-                        ? AppColors.darkTextSecondary.withOpacity(0.5)
-                        : AppColors.cardBrown.withOpacity(0.4),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '아는 단어',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.cardBrownLight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 8),
             // Card area
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
@@ -226,74 +201,65 @@ class _WordLearningScreenState extends ConsumerState<WordLearningScreen> {
                 ),
               ),
             ),
-            // Save hint
+            // Hint row
             Padding(
               padding: EdgeInsets.symmetric(horizontal: padding, vertical: 8),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Icon(
-                    Icons.arrow_downward,
-                    size: 16,
-                    color: isDark
-                        ? AppColors.darkTextSecondary.withOpacity(0.5)
-                        : AppColors.cardBrown.withOpacity(0.4),
+                  _buildHintItem(
+                    icon: Icons.arrow_upward,
+                    label: '아는 단어',
+                    isDark: isDark,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '저장하기',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.cardBrownLight,
-                    ),
+                  _buildHintItem(
+                    icon: Icons.touch_app,
+                    label: '탭하여 뒤집기',
+                    isDark: isDark,
+                  ),
+                  _buildHintItem(
+                    icon: Icons.arrow_downward,
+                    label: '저장하기',
+                    isDark: isDark,
                   ),
                 ],
               ),
             ),
-            // Navigation buttons
+            // Action buttons
             Padding(
               padding: EdgeInsets.all(padding),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    onPressed: session.hasPrevious
-                        ? () {
-                            ref.read(learningSessionProvider.notifier).previousWord();
-                          }
-                        : null,
-                    icon: const Icon(Icons.chevron_left),
-                    iconSize: 32,
+                  _buildActionButton(
+                    icon: Icons.bookmark_add_outlined,
+                    label: '저장',
+                    color: isDark ? AppColors.mint : AppColors.cardTerracotta,
+                    onTap: () {
+                      ref
+                          .read(learningSessionProvider.notifier)
+                          .saveToVocabulary();
+                      _showSnackBar(
+                        context,
+                        '단어장에 저장됨',
+                        isDark ? AppColors.mint : AppColors.cardTerracotta,
+                      );
+                    },
                   ),
-                  SizedBox(
-                    width: 120,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        ref.read(learningSessionProvider.notifier).flipCard();
-                        ref.read(learningSessionProvider.notifier).recordView();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isDark ? AppColors.mint : AppColors.cardTerracotta,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Text(session.isCardFlipped ? '앞면 보기' : '뒤집기'),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: session.hasNext
-                        ? () {
-                            ref.read(learningSessionProvider.notifier).nextWord();
-                          }
-                        : null,
-                    icon: const Icon(Icons.chevron_right),
-                    iconSize: 32,
+                  _buildActionButton(
+                    icon: Icons.check_circle_outline,
+                    label: '알아요',
+                    color: isDark ? AppColors.mint : AppColors.cardBrown,
+                    onTap: () {
+                      ref
+                          .read(learningSessionProvider.notifier)
+                          .markAsKnown();
+                      _showSnackBar(
+                        context,
+                        '아는 단어로 표시됨',
+                        isDark ? AppColors.mint : AppColors.cardBrown,
+                      );
+                    },
                   ),
                 ],
               ),
@@ -311,6 +277,69 @@ class _WordLearningScreenState extends ConsumerState<WordLearningScreen> {
         backgroundColor: color,
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Widget _buildHintItem({
+    required IconData icon,
+    required String label,
+    required bool isDark,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: isDark
+              ? AppColors.darkTextSecondary.withOpacity(0.6)
+              : AppColors.cardBrown.withOpacity(0.5),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: isDark
+                ? AppColors.darkTextSecondary.withOpacity(0.6)
+                : AppColors.cardBrownLight,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
