@@ -221,3 +221,23 @@ python retry_missing_translations.py       # 실패한 번역 재시도 (최대 
 2. `configs/{version}.json` 설정 파일 생성
 3. `data/{version}/` 폴더 생성 (stopwords.txt, protected_words.txt, proper_nouns.txt)
 4. `python run_pipeline.py --version {version}` 실행
+
+## Flutter App (apps/bible_vocabulary)
+
+### iOS 시뮬레이터에서 실행
+Hot reload를 사용하려면 별도 터미널 창에서 실행해야 함. 스크립트 파일을 생성하여 실행:
+
+```bash
+# 1. 스크립트 파일 생성
+cat > /tmp/run_flutter.sh << 'SCRIPT'
+#!/bin/bash
+cd /Users/peter/Dev/bible-vocabulary/apps/bible_vocabulary
+flutter run -d "iPhone 16 Pro"
+SCRIPT
+chmod +x /tmp/run_flutter.sh
+
+# 2. 새 터미널 창에서 실행
+osascript -e 'tell application "Terminal" to do script "/tmp/run_flutter.sh"'
+```
+
+**주의**: 백그라운드 실행(`run_in_background`)으로는 Hot reload (`r`) 사용 불가
