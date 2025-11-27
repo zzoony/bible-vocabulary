@@ -16,3 +16,9 @@ pipeline/output/
 .idea/
 .vscode/
 *.swp
+
+# Design assets (local only)
+design/
+
+# Serena MCP tool config (local only)
+.serena/
