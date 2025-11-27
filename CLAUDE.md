@@ -132,6 +132,19 @@ python retry_missing_translations.py       # 실패한 번역 재시도 (최대 
 - `MIN_WORD_LENGTH`: 최소 단어 길이 (기본: 2)
 - `MIN_FREQUENCY`: 최소 출현 빈도 (기본: 2)
 
+### scripts/extract_sentences.py
+- `MIN_SENTENCES_PER_WORD`: 최소 예문 수 (기본: 1)
+- `MAX_SENTENCES_PER_WORD`: 최대 예문 수 (기본: 5)
+- `MAX_SENTENCE_LENGTH`: 최대 문장 길이 (기본: 300)
+- `MIN_SENTENCE_LENGTH`: 최소 문장 길이 (기본: 30)
+
+### data/{version}/stopwords.txt 구조
+불용어 파일은 다음 카테고리로 구성:
+- **기본 불용어**: 관사, 대명사, 전치사, 접속사 등
+- **축약형**: lemmatization으로 생성된 축약형 (dont, didnt 등)
+- **Lemmatization artifacts**: 성경에 없는 lemma (fulfil, appal 등)
+- **Wrong lemmas**: 잘못된 lemma (hat→hated 오류, jam→James 오류 등)
+
 ### configs/{version}.json
 ```json
 {
@@ -163,7 +176,7 @@ python retry_missing_translations.py       # 실패한 번역 재시도 (최대 
 {
   "metadata": {
     "source": "New International Version",
-    "total_unique_words": 4930,
+    "total_unique_words": 4868,
     "definitions_added": true
   },
   "words": [
@@ -185,9 +198,9 @@ python retry_missing_translations.py       # 실패한 번역 재시도 (최대 
 {
   "metadata": {
     "source": "New International Version",
-    "total_sentences": 15177,
+    "total_sentences": 16224,
     "korean_translations_added": true,
-    "translations_count": 15177
+    "translations_count": 16224
   },
   "sentences": {
     "psalms-18-1": {

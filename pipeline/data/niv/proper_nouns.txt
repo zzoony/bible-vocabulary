@@ -166,6 +166,21 @@ moabites
 edomites
 ammonites
 
+# Minor Names (from vocabulary without sentences)
+zebub
+eltolad
+awel
+nogah
+keros
+bakbuk
+bazluth
+barkos
+neziah
+jaala
+obal
+graf
+sol
+
 # Divine Names (keep these - they're important vocabulary)
 # lord
 # god

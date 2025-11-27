@@ -13,9 +13,9 @@ from config import (
 )
 
 # Configuration
-MIN_SENTENCES_PER_WORD = 2
+MIN_SENTENCES_PER_WORD = 1  # 1개만 있어도 포함
 MAX_SENTENCES_PER_WORD = 5
-MAX_SENTENCE_LENGTH = 200  # Skip very long verses
+MAX_SENTENCE_LENGTH = 300  # Skip very long verses (increased from 200)
 MIN_SENTENCE_LENGTH = 30   # Skip very short verses
 
 
@@ -59,13 +59,13 @@ def get_word_variants(word: str) -> set:
         return variants
 
     # Plural forms (improved rules)
-    if not word.endswith("s"):
-        if word.endswith(("s", "x", "z", "ch", "sh")):
-            variants.add(word + "es")
-        elif word.endswith("y") and len(word) > 1 and word[-2] not in "aeiou":
-            variants.add(word[:-1] + "ies")
-        else:
-            variants.add(word + "s")
+    # Handle words ending in s, x, z, ch, sh -> add "es"
+    if word.endswith(("s", "x", "z", "ch", "sh")):
+        variants.add(word + "es")
+    elif word.endswith("y") and len(word) > 1 and word[-2] not in "aeiou":
+        variants.add(word[:-1] + "ies")
+    else:
+        variants.add(word + "s")
 
     # Past tense (-ed) forms
     if not word.endswith("ed"):
@@ -77,13 +77,15 @@ def get_word_variants(word: str) -> set:
             variants.add(word + "ed")
 
     # Progressive (-ing) forms
-    if not word.endswith("ing"):
-        if word.endswith("e") and not word.endswith("ee"):
-            variants.add(word[:-1] + "ing")
-        elif word.endswith("ie"):
-            variants.add(word[:-2] + "ying")
-        else:
-            variants.add(word + "ing")
+    if word.endswith("e") and not word.endswith("ee"):
+        variants.add(word[:-1] + "ing")
+    elif word.endswith("ie"):
+        variants.add(word[:-2] + "ying")
+    elif not word.endswith("ing"):
+        variants.add(word + "ing")
+    else:
+        # Words ending in -ing (e.g., "fling" -> "flinging")
+        variants.add(word + "ing")
 
     return variants
 
