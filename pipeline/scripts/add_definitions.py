@@ -1,8 +1,9 @@
 """Step 6: Add pronunciation and Korean definitions to vocabulary.
 
 Requirements:
-    - Claude CLI must be installed and available in PATH
-      (https://docs.anthropic.com/en/docs/claude-cli)
+    - Claude CLI or droid CLI must be installed and available in PATH
+      - Claude: https://docs.anthropic.com/en/docs/claude-cli
+      - droid: use --cli droid option
 """
 
 from __future__ import annotations
@@ -36,7 +37,7 @@ CLI_TOOL = DEFAULT_CLI
 CLI_MODEL = DEFAULT_MODEL
 
 
-def get_cli_command() -> list:
+def get_cli_command() -> list[str]:
     """Get CLI command based on the tool type."""
     if CLI_TOOL == "droid":
         return ["droid", "exec", "-o", "text", "-m", CLI_MODEL]
@@ -286,6 +287,7 @@ def main():
         "--cli",
         type=str,
         default=DEFAULT_CLI,
+        choices=["claude", "droid"],
         help=f"CLI tool to use (default: {DEFAULT_CLI})"
     )
     parser.add_argument(
